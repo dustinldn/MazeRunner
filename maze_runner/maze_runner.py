@@ -62,15 +62,10 @@ class MainPage(tk.Frame):
         self.laps = tk.Label(self, text=0)
         self.laps.grid(row=2, column=1)
 
-        #resize configurations
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=1)
-        self.grid_columnconfigure(2, weight=1)
-        self.grid_rowconfigure(3, weight=1)
-        self.grid_columnconfigure(3, weight=1)
+        #resize configurations for each row and column
+        for row_or_col in range(0,4):
+            self.grid_rowconfigure(row_or_col, weight=1)
+            self.grid_columnconfigure(row_or_col, weight=1)
 
     def _start_training(self):
         ''''
@@ -79,17 +74,15 @@ class MainPage(tk.Frame):
 
         #Shows different images in a label.
         self.traveled_distance['text'] = 1
+        self.laps['text'] = 1
         x = 0
         while(True):
-            print(x)
-            x+=1
             for i in range(1,4):
                 new_image = Image.open("mazes/train/train_maze_0{index}.jpg".format(index=i))
                 new_image = new_image.resize((500,500))
                 new_image = ImageTk.PhotoImage(new_image)
                 self.current_status['image'] = new_image
                 self.current_status.image=new_image
-                self.laps['text'] = 1
                 self.update()
                 time.sleep(.5)
 
