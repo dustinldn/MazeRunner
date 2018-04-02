@@ -77,6 +77,21 @@ class MainPage(tk.Frame):
         Testwise content.
         '''
 
+        #Shows different images in a label.
+        self.traveled_distance['text'] = 1
+        x = 0
+        while(True):
+            print(x)
+            x+=1
+            for i in range(1,4):
+                new_image = Image.open("mazes/train/train_maze_0{index}.jpg".format(index=i))
+                new_image = new_image.resize((500,500))
+                new_image = ImageTk.PhotoImage(new_image)
+                self.current_status['image'] = new_image
+                self.current_status.image=new_image
+                self.laps['text'] = 1
+                self.update()
+                time.sleep(.5)
 
 if __name__ == '__main__':
     maze_runner = Mazerunner()
