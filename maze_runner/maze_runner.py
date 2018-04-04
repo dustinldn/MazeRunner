@@ -67,13 +67,16 @@ class MainPage(tk.Frame):
             self.grid_rowconfigure(row_or_col, weight=1)
             self.grid_columnconfigure(row_or_col, weight=1)
 
-    def show_image(self, image):
+    def update_state(self, image, distance, laps):
         '''
-        Shows the given image in the image label of the GUI.
+        Shows the given image in the image label of the GUI, updates distance and laps.
         :param image: The image to display
         '''
         image = image.resize((500,500))
         image = ImageTk.PhotoImage(image)
         self.current_status['image'] = image
         self.current_status.image=image
+
+        self.traveled_distance['text'] = distance
+        self.laps['text'] = laps
         self.update()
