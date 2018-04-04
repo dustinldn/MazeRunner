@@ -3,10 +3,17 @@ import random
 import maze_runner
 from PIL import Image
 import glob
+import operator
 import time
 
 #default folder defines
 training_mazes_path = 'mazes/train/*.jpg'
+
+#image specific
+image_width = 100
+image_height = 100
+image_start_point = image_width/2, image_height - 1
+fitness_boundary = 200
 
 #genetic algorithm defines
 population_count = 20
