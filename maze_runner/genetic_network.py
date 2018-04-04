@@ -51,10 +51,10 @@ class GeneticAlgo:
 
         training_mazes = self.load_training_mazes()
         for image in training_mazes:
-            max_fitness = 0
+            global_fitness = 0
             n_generation = 0
             #get access to pixel values
-            while max_fitness < fitness_boundary:
+            while global_fitness < fitness_boundary:
                 for idx, (network, fitness) in enumerate(self.population):
                     pix_map = image.load()
                     #location of the current pixel
@@ -92,6 +92,8 @@ class GeneticAlgo:
 
                         #update statistics
                         current_fitness = image_height - current_loc[1] + image_height*current_laps
+                        if current_fitness > global_fitness:
+                            global_fitness = current_fitness
                         #if we managed to go 2 laps
 
                         #move the current point
@@ -99,10 +101,17 @@ class GeneticAlgo:
                         y_loc -= 1
                         current_loc = x_loc, y_loc
                         #update the gui with all statistics
-                        self.gui.frame.update_state(image, current_fitness, current_laps)
+                        self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
                         time.sleep(0.05)
 
+    def calculate_distances(self, current_loc, maze):
+        '''
 
+        :param current_loc: tuple containing x and y coordinates
+        :param maze: the image displaying the maze
+        :return: tuple of 5 distances to the terrain in pixel: W, NW, N, NE, E
+        '''
+        pass
 
     def load_training_mazes(self):
         '''
