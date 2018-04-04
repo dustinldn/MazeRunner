@@ -26,7 +26,7 @@ n_inputs = 5
 n_nodes_hl1 = 5
 n_nodes_hl2 = 5
 
-n_classes = 4
+n_classes = 3
 
 class GeneticAlgo:
     ''''
@@ -102,15 +102,16 @@ class NeuralNetwork:
         :param data: The input for the neural network.
         :return: The estimated class.
         '''
-        l1 = tf.add(tf.matmul(data, self.hidden_1_layer['weights']) + self.hidden_1_layer['biases'])
-        l1 = tf.nn.relu(l1)
+        with tf.Session() as sess:
+            l1 = tf.add(tf.matmul(data, self.hidden_1_layer['weights']) + self.hidden_1_layer['biases'])
+            l1 = tf.nn.relu(l1)
 
-        l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']) + self.hidden_2_layer['biases'])
-        l2 = tf.nn.relu(l2)
+            l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']) + self.hidden_2_layer['biases'])
+            l2 = tf.nn.relu(l2)
 
-        output = tf.add(tf.matmul(l2, self.output_layer['weights']) + self.output_layer['biases'])
+            output = sess.run(tf.add(tf.matmul(l2, self.output_layer['weights']) + self.output_layer['biases']))
 
-        return output
+            return output
 
     def mate(self, other_nn):
         '''
