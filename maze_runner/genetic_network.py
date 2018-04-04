@@ -66,9 +66,8 @@ class GeneticAlgo:
                     #fitness of the network
                     current_fitness = 0
                     current_laps = 0
-                    #will be true if either terrain is hit or 2 laps are absolved
-                    run_finished = False
-                    while not run_finished:
+
+                    while True:
                         # recolor last visited location
                         pix_map[last_loc] = last_val
                         #save current color
@@ -76,6 +75,9 @@ class GeneticAlgo:
                         #case if we exceed the boundary limit. this means that we finished one lap
                         try:
                             last_val = pix_map[last_loc]
+                            if last_val == (0,0,0):
+                                break
+                            #last_val holds our current value. if its black, we hit terrain, so exit the loop
                         except IndexError:
                             #if we are in the
                             if current_fitness >= fitness_boundary:
