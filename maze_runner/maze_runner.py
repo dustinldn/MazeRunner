@@ -81,7 +81,7 @@ class MainPage(tk.Frame):
         Shows the given image in the image label of the GUI, updates distance and laps.
         :param image: The image to display
         '''
-        image = image.resize((500,500))
+        image = image.resize((600,600))
         image = ImageTk.PhotoImage(image)
         self.current_status['image'] = image
         self.current_status.image=image

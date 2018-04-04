@@ -7,13 +7,15 @@ import operator
 import time
 
 #default folder defines
-training_mazes_path = 'mazes/train/*.jpg'
+training_mazes_path = 'mazes/train/*.png'
 
 #image specific
 image_width = 100
 image_height = 100
 image_start_point = image_width/2, image_height - 1
 fitness_boundary = 200
+terrain_sight = 5
+terrain_color = (0,0,0)
 
 #genetic algorithm defines
 population_count = 20
@@ -27,6 +29,10 @@ n_nodes_hl1 = 5
 n_nodes_hl2 = 5
 
 n_classes = 3
+#maps the activation of each layer to a movement command. 0->move left, 1->move_up, 2->move_right
+output_mapping = {0 : (-1, 0),
+                  1 : (0, -1),
+                  2 : (1, 0)}
 
 class GeneticAlgo:
     ''''
@@ -75,7 +81,7 @@ class GeneticAlgo:
                         #case if we exceed the boundary limit. this means that we finished one lap
                         try:
                             last_val = pix_map[last_loc]
-                            if last_val == (0,0,0):
+                            if last_val == terrain_color:
                                 break
                             #last_val holds our current value. if its black, we hit terrain, so exit the loop
                         except IndexError:
@@ -94,24 +100,64 @@ class GeneticAlgo:
                         current_fitness = image_height - current_loc[1] + image_height*current_laps
                         if current_fitness > global_fitness:
                             global_fitness = current_fitness
-                        #if we managed to go 2 laps
 
                         #move the current point
-                        x_loc, y_loc = current_loc
-                        y_loc -= 1
-                        current_loc = x_loc, y_loc
+                        current_loc = self.compute_next_location(current_loc, pix_map, network)
                         #update the gui with all statistics
                         self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
-                        time.sleep(0.05)
+                        #time.sleep(0.01)
+
+    def compute_next_location(self, current_loc, pix_map, network):
+        distances = self.calculate_distances(current_loc, pix_map)
+        result = network.compute(distances)
+        # convert nd_array to list and get first entry. Those are our computed values
+        result = result.tolist()[0]
+        winning_neuron = result.index(max(result))
+        movement_commmand = output_mapping[winning_neuron]
+        next_location = tuple(map(operator.add, current_loc, movement_commmand))
+        return next_location
+
 
     def calculate_distances(self, current_loc, maze):
         '''
-
+        Calculates the distances into each direction and converts it into a rank 2 tensor.
         :param current_loc: tuple containing x and y coordinates
         :param maze: the image displaying the maze
         :return: tuple of 5 distances to the terrain in pixel: W, NW, N, NE, E
         '''
-        pass
+
+        #tuples wich will be used to calculate the distances in each direction
+        #i.e. one has to go -1 in x direction and 0 in y direction to move to W and check for the nearest black pixel
+        #                    W      NW      N      NE     E
+        direction_tuples = [(-1,0),(-1,-1),(0,-1),(1,-1),(1,0)]
+
+        distances =[self.calculate_distance_for_one_direciton(current_loc, maze, direction_tuple) for direction_tuple in direction_tuples]
+        #convert it to a 2D tensor
+        distances_tensor = tf.Variable(distances)
+        distances_tensor = tf.reshape(distances_tensor, [1, 5])
+        return distances_tensor
+
+
+    def calculate_distance_for_one_direciton(self, current_loc, maze, direction_tuple):
+        '''
+        Calculates the distance to the nearst black pixel in the chosen direction.
+        :param current_log: current location
+        :param direction_tuple: tuple to specify the direction
+        :return: Distance to nearest black pixel (terrain) in pixel.
+        '''
+
+        #use float hier because the network needs float32
+        distance = 0.0
+        while distance < terrain_sight:
+            #shift the current location in the wanted direction
+            current_loc = tuple(map(operator.add, current_loc, direction_tuple))
+            #if Terrain
+            if maze[current_loc] == terrain_color:
+                break
+            else:
+                distance +=1.0
+        return distance
+
 
     def load_training_mazes(self):
         '''
@@ -166,15 +212,16 @@ class NeuralNetwork:
         :return: The estimated class.
         '''
         with tf.Session() as sess:
-            l1 = tf.add(tf.matmul(data, self.hidden_1_layer['weights']) + self.hidden_1_layer['biases'])
+            sess.run(tf.global_variables_initializer())
+            l1 = tf.add(tf.matmul(data, self.hidden_1_layer['weights']), self.hidden_1_layer['biases'])
             l1 = tf.nn.relu(l1)
 
-            l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']) + self.hidden_2_layer['biases'])
+            l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']), self.hidden_2_layer['biases'])
             l2 = tf.nn.relu(l2)
 
-            output = sess.run(tf.add(tf.matmul(l2, self.output_layer['weights']) + self.output_layer['biases']))
+            output = tf.add(tf.matmul(l2, self.output_layer['weights']), self.output_layer['biases'])
 
-            return output
+            return sess.run(output)
 
     def mate(self, other_nn):
         '''
