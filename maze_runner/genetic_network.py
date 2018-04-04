@@ -45,10 +45,62 @@ class GeneticAlgo:
         self.population = [(NeuralNetwork(), 0) for i in range(0,population_count)]
 
     def train_networks(self):
+        '''
+        Starts the genetic learning process with the images.
+        '''
+
         training_mazes = self.load_training_mazes()
         for image in training_mazes:
-            self.gui.frame.show_image(image)
-            time.sleep(3)
+            max_fitness = 0
+            n_generation = 0
+            #get access to pixel values
+            while max_fitness < fitness_boundary:
+                for idx, (network, fitness) in enumerate(self.population):
+                    pix_map = image.load()
+                    #location of the current pixel
+                    current_loc = image_start_point
+                    #location of the last pixel
+                    last_loc = current_loc
+                    #value of the last pixel
+                    last_val = pix_map[last_loc]
+                    #fitness of the network
+                    current_fitness = 0
+                    current_laps = 0
+                    #will be true if either terrain is hit or 2 laps are absolved
+                    run_finished = False
+                    while not run_finished:
+                        # recolor last visited location
+                        pix_map[last_loc] = last_val
+                        #save current color
+                        last_loc = current_loc
+                        #case if we exceed the boundary limit. this means that we finished one lap
+                        try:
+                            last_val = pix_map[last_loc]
+                        except IndexError:
+                            #if we are in the
+                            if current_fitness >= fitness_boundary:
+                                break
+                            current_laps +=1
+                            current_loc = image_start_point
+                            last_loc = current_loc
+                            last_val = pix_map[last_loc]
+                            continue
+                        #paint current position red
+                        pix_map[current_loc] = (255,0,0)
+
+                        #update statistics
+                        current_fitness = image_height - current_loc[1] + image_height*current_laps
+                        #if we managed to go 2 laps
+
+                        #move the current point
+                        x_loc, y_loc = current_loc
+                        y_loc -= 1
+                        current_loc = x_loc, y_loc
+                        #update the gui with all statistics
+                        self.gui.frame.update_state(image, current_fitness, current_laps)
+                        time.sleep(0.05)
+
+
 
     def load_training_mazes(self):
         '''
