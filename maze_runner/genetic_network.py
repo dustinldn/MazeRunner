@@ -16,6 +16,15 @@ n_nodes_hl2 = 5
 n_classes = 4
 
 class GeneticAlgo:
+    ''''
+    Class for the genetic algorithm.
+
+    Attributes
+    ----------
+    gui : instance of the gui to show the results of the network.
+    population: list of tuples
+                each tuple contains a network and the fitness of the network for the current task.
+    '''
 
     def __init__(self):
         #initialize random population with fitness 0
@@ -37,6 +46,7 @@ class NeuralNetwork:
         '''
         Base constructor.
         Initializes the neural network with its layers, weights and biases randomly.
+        Takes either 0 or 3 arguments: hidden_1_layer, hidden_2_layer, output_layer
         '''
         default_hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
                           'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
@@ -47,9 +57,20 @@ class NeuralNetwork:
         default_output_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl2, n_classes])),
                         'biases': tf.Variable(tf.random_normal([n_classes]))}
 
-        self.hidden_1_layer = kwargs.get('hidden_1_layer', default_hidden_1_layer)
-        self.hidden_2_layer = kwargs.get('hidden_2_layer', default_hidden_2_layer)
-        self.output_layer = kwargs.get('output_layer', default_output_layer)
+        #make sure that if arguments are given, all needed arguments have to be given.
+        key_hidden_1_layer = 'hidden_1_layer'
+        key_hidden_2_layer = 'hidden_2_layer'
+        key_output_layer = 'output_layer'
+        if len(kwargs.keys()) > 0:
+            for key in [key_hidden_1_layer, key_hidden_2_layer, key_output_layer]:
+                try:
+                    kwargs[key]
+                except KeyError:
+                    raise KeyError("The arguments of the constructor don't match the needed arguments.")
+
+        self.hidden_1_layer = kwargs.get(key_hidden_1_layer, default_hidden_1_layer)
+        self.hidden_2_layer = kwargs.get(key_hidden_2_layer, default_hidden_2_layer)
+        self.output_layer = kwargs.get(key_output_layer, default_output_layer)
 
     def compute(self, data):
         '''
@@ -80,7 +101,7 @@ class NeuralNetwork:
         new_layer_2 = self.hidden_2_layer if not random_bool else other_nn.hidden_2_layer
         new_output_layer = self.output_layer if random.getrandbits(1) else other_nn.output_layer
 
-        child_network = NeuralNetwork(new_layer_1, new_layer_2, new_output_layer)
+        child_network = NeuralNetwork(hidden_1_layer=new_layer_1, hidden_2_layer=new_layer_2, output_layer=new_output_layer)
         return child_network
 
 
