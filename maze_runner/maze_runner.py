@@ -25,8 +25,8 @@ class Mazerunner(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        frame = MainPage(container, train_func)
-        frame.grid(row=0, column=0, sticky='nsew')
+        self.frame = MainPage(container, train_func)
+        self.frame.grid(row=0, column=0, sticky='nsew')
 
     def run(self):
         self.mainloop()
@@ -67,25 +67,13 @@ class MainPage(tk.Frame):
             self.grid_rowconfigure(row_or_col, weight=1)
             self.grid_columnconfigure(row_or_col, weight=1)
 
-    def _start_training(self):
-        ''''
-        Testwise content.
+    def show_image(self, image):
         '''
-
-        #Shows different images in a label.
-        self.traveled_distance['text'] = 1
-        self.laps['text'] = 1
-        x = 0
-        while(True):
-            for i in range(1,4):
-                new_image = Image.open("mazes/train/train_maze_0{index}.jpg".format(index=i))
-                new_image = new_image.resize((500,500))
-                new_image = ImageTk.PhotoImage(new_image)
-                self.current_status['image'] = new_image
-                self.current_status.image=new_image
-                self.update()
-                time.sleep(.5)
-
-if __name__ == '__main__':
-    maze_runner = Mazerunner()
-    maze_runner.run()
+        Shows the given image in the image label of the GUI.
+        :param image: The image to display
+        '''
+        image = image.resize((500,500))
+        image = ImageTk.PhotoImage(image)
+        self.current_status['image'] = image
+        self.current_status.image=image
+        self.update()

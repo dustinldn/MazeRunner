@@ -1,6 +1,12 @@
 import tensorflow as tf
 import random
 import maze_runner
+from PIL import Image
+import glob
+import time
+
+#default folder defines
+training_mazes_path = 'mazes/train/*.jpg'
 
 #genetic algorithm defines
 population_count = 20
@@ -28,11 +34,22 @@ class GeneticAlgo:
 
     def __init__(self):
         #initialize random population with fitness 0
-        self.gui = maze_runner.Mazerunner(self.run_algo)
+        self.gui = maze_runner.Mazerunner(self.train_networks)
         self.population = [(NeuralNetwork(), 0) for i in range(0,population_count)]
 
-    def run_algo(self):
-        print("Started algorithm.")
+    def train_networks(self):
+        training_mazes = self.load_training_mazes()
+        for image in training_mazes:
+            self.gui.frame.show_image(image)
+            time.sleep(3)
+
+    def load_training_mazes(self):
+        '''
+        Loads the images used for training the networks.
+        :return: List of images.
+        '''
+        training_mazes = [Image.open(filename) for filename in glob.glob(training_mazes_path)]
+        return training_mazes
 
     def run_gui(self):
         self.gui.run()
