@@ -7,10 +7,10 @@ class Mazerunner(tk.Tk):
     Base GUI Class
     '''
 
-    def __init__(self, *args, **kwargs):
-        self._initalize_gui()
+    def __init__(self, train_func, *args, **kwargs):
+        self._initalize_gui(train_func)
 
-    def _initalize_gui(self):
+    def _initalize_gui(self, train_func):
         '''
         Set up the GUI and all needed parameters. Declares a shared container wich all additional frames have to
         inherit.
@@ -25,7 +25,7 @@ class Mazerunner(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        frame = MainPage(container)
+        frame = MainPage(container, train_func)
         frame.grid(row=0, column=0, sticky='nsew')
 
     def run(self):
@@ -37,7 +37,7 @@ class MainPage(tk.Frame):
     It contains a start button, an image frame and the corresponding statistics.
     '''
 
-    def __init__(self, parent):
+    def __init__(self, parent, train_func):
         '''
 
         :param parent:
@@ -46,7 +46,7 @@ class MainPage(tk.Frame):
         #static elements
         tk.Label(self, text='Current status:').grid(row=0, column=0, sticky='nsew')
         tk.Label(self, text='Distance:').grid(row=1, column=0)
-        tk.Button(self, text='Start training.', command=self._start_training).grid(row=3)
+        tk.Button(self, text='Start training.', command=train_func).grid(row=3)
         tk.Label(self, text='Laps:').grid(row=2, column=0)
 
         #dynamic elements

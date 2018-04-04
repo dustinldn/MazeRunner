@@ -1,5 +1,6 @@
 import tensorflow as tf
 import random
+import maze_runner
 
 #genetic algorithm defines
 population_count = 20
@@ -18,40 +19,37 @@ class GeneticAlgo:
 
     def __init__(self):
         #initialize random population with fitness 0
+        self.gui = maze_runner.Mazerunner(self.run_algo)
         self.population = [(NeuralNetwork(), 0) for i in range(0,population_count)]
 
-    def run(self):
-        pass
+    def run_algo(self):
+        print("Started algorithm.")
+
+    def run_gui(self):
+        self.gui.run()
 
 class NeuralNetwork:
     '''
     Baseclass for the neural networks wich will be used for the task.
     '''
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         '''
         Base constructor.
         Initializes the neural network with its layers, weights and biases randomly.
         '''
-        self.hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
+        default_hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
                           'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
-        self.hidden_2_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
+        default_hidden_2_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
                           'biases': tf.Variable(tf.random_normal([n_nodes_hl2]))}
 
-        self.output_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl2, n_classes])),
+        default_output_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl2, n_classes])),
                         'biases': tf.Variable(tf.random_normal([n_classes]))}
 
-    def __init__(self, hidden_1_layer, hidden_2_layer, output_layer):
-        '''
-        Custom constructor to assign attributes directly.
-        :param hidden_1_layer: Hidden layer 1 with weights and biases
-        :param hidden_2_layer: Hidden layer 2 with weights and biases
-        :param output_layer: Output layer with weights and biases.
-        '''
-        self.hidden_1_layer = hidden_1_layer
-        self.hidden_2_layer = hidden_2_layer
-        self.output_layer = output_layer
+        self.hidden_1_layer = kwargs.get('hidden_1_layer', default_hidden_1_layer)
+        self.hidden_2_layer = kwargs.get('hidden_2_layer', default_hidden_2_layer)
+        self.output_layer = kwargs.get('output_layer', default_output_layer)
 
     def compute(self, data):
         '''
@@ -88,3 +86,4 @@ class NeuralNetwork:
 
 if __name__ == '__main__':
     algo = GeneticAlgo()
+    algo.run_gui()
