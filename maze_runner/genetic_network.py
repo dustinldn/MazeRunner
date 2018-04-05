@@ -178,10 +178,7 @@ class GeneticAlgo:
         direction_tuples = [(-1,0),(-1,-1),(0,-1),(1,-1),(1,0)]
 
         distances =[self.calculate_distance_for_one_direciton(current_loc, maze, direction_tuple) for direction_tuple in direction_tuples]
-        #convert it to a 2D tensor
-        distances_tensor = tf.Variable(distances)
-        distances_tensor = tf.reshape(distances_tensor, [1, 5])
-        return distances_tensor
+        return distances
 
 
     def calculate_distance_for_one_direciton(self, current_loc, maze, direction_tuple):
@@ -227,29 +224,67 @@ class NeuralNetwork:
         Initializes the neural network with its layers, weights and biases randomly.
         Takes either 0 or 3 arguments: hidden_1_layer, hidden_2_layer, output_layer
         '''
-        default_hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
-                          'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
-        default_hidden_2_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
-                          'biases': tf.Variable(tf.random_normal([n_nodes_hl2]))}
+        self._init_layer_graph()
 
-        default_output_layer = {'weights': tf.Variable(tf.random_normal([n_nodes_hl2, n_classes])),
-                        'biases': tf.Variable(tf.random_normal([n_classes]))}
+        with tf.Session(graph=self.init_graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            hl1_weights = self.init_graph.get_tensor_by_name('hl1_weights:0')
+            hl1_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
+            hl2_weights = self.init_graph.get_tensor_by_name('hl2_weights:0')
+            hl2_biases = self.init_graph.get_tensor_by_name('hl2_biases:0')
+            out_weights = self.init_graph.get_tensor_by_name('out_weights:0')
+            out_biases = self.init_graph.get_tensor_by_name('out_biases:0')
+            default_hidden_1_layer = {'weights' :  sess.run(hl1_weights),
+                                      'biases' : sess.run(hl1_biases)}
+            default_hidden_2_layer = {'weights': sess.run(hl2_weights),
+                                      'biases': sess.run(hl2_biases)}
+            default_output_layer = {'weights': sess.run(out_weights),
+                                      'biases': sess.run(out_biases)}
 
-        #make sure that if arguments are given, all needed arguments have to be given.
-        key_hidden_1_layer = 'hidden_1_layer'
-        key_hidden_2_layer = 'hidden_2_layer'
-        key_output_layer = 'output_layer'
-        if len(kwargs.keys()) > 0:
-            for key in [key_hidden_1_layer, key_hidden_2_layer, key_output_layer]:
-                try:
-                    kwargs[key]
-                except KeyError:
-                    raise KeyError("The arguments of the constructor don't match the needed arguments.")
 
-        self.hidden_1_layer = kwargs.get(key_hidden_1_layer, default_hidden_1_layer)
-        self.hidden_2_layer = kwargs.get(key_hidden_2_layer, default_hidden_2_layer)
-        self.output_layer = kwargs.get(key_output_layer, default_output_layer)
+        self.hidden_1_layer = kwargs.get('hidden_1_layer', default_hidden_1_layer)
+        self.hidden_2_layer = kwargs.get('hidden_2_layer', default_hidden_2_layer)
+        self.output_layer = kwargs.get('output_layer', default_output_layer)
+
+        self._init_computing_graph()
+
+    def _init_computing_graph(self):
+        '''
+        Creates the graph for the forward pass of the network.
+        :return:
+        '''
+        self.compute_graph = tf.Graph()
+        with self.compute_graph.as_default():
+            #placeholder for input
+            x = tf.placeholder('float')
+
+            l1 = tf.add(tf.matmul(x, self.hidden_1_layer['weights']), self.hidden_1_layer['weights'])
+            l1 = tf.nn.relu(l1)
+
+            l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']), self.hidden_2_layer['biases'])
+            l2 = tf.nn.relu(l2)
+            output = tf.add(tf.matmul(l2, self.output_layer['weights']), self.output_layer['biases'])
+
+
+
+
+    def _init_layer_graph(self):
+        '''
+        Initalizes computing graph to create the layer in the neuron.
+        :return:
+        '''
+        self.init_graph = tf.Graph()
+        with self.init_graph.as_default():
+            hl1_weights = tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1]), name='hl1_weights')
+            hl1_biases  = tf.Variable(tf.random_normal([n_nodes_hl1]), name='hl1_biases')
+
+            hl2_weights = tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2]), name='hl2_weights')
+            hl2_biases  =  tf.Variable(tf.random_normal([n_nodes_hl2]), name='hl2_biases')
+
+            out_weights = tf.Variable(tf.random_normal([n_nodes_hl2, n_classes]), name='out_weights')
+            out_biases = tf.Variable(tf.random_normal([n_classes]), name='out_biases')
+
 
     def compute(self, data):
         '''
