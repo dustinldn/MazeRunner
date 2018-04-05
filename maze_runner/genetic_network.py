@@ -150,17 +150,12 @@ class GeneticAlgo:
 
     def compute_next_location(self, current_loc, pix_map, network):
         distances = self.calculate_distances(current_loc, pix_map)
-        print('Distances: {}'.format(distances))
         result = network.compute(distances)
         # convert nd_array to list and get first entry. Those are our computed values
         result = result.tolist()[0]
-        print('Result: {}'.format(result))
         winning_neuron = result.index(max(result))
-        print('Winning: {}'.format(winning_neuron))
         movement_commmand = output_mapping[winning_neuron]
-        print('Movement_command: {}'.format(movement_commmand))
         next_location = tuple(map(operator.add, current_loc, movement_commmand))
-        print('Next location: {}'.format(next_location))
         return next_location
 
 
@@ -194,11 +189,15 @@ class GeneticAlgo:
         while distance < terrain_sight:
             #shift the current location in the wanted direction
             current_loc = tuple(map(operator.add, current_loc, direction_tuple))
-            #if Terrain
-            if maze[current_loc] == terrain_color:
-                break
-            else:
-                distance +=1.0
+            #if we look over the finish, we have distance of 5 to next terrain
+            try:
+                # if Terrain
+                if maze[current_loc] == terrain_color:
+                    break
+                else:
+                    distance +=1.0
+            except IndexError:
+                distance = 5
         return distance
 
 
@@ -299,7 +298,6 @@ class NeuralNetwork:
             sess.run(tf.global_variables_initializer())
             input_data = self.compute_graph.get_tensor_by_name('input_data:0')
             output = self.compute_graph.get_tensor_by_name('output_layer:0')
-            print(data)
             result = sess.run(output, feed_dict={input_data : data})
         return result
 
