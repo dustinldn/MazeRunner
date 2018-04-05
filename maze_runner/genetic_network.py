@@ -98,13 +98,15 @@ class GeneticAlgo:
                             last_loc = current_loc
                             last_val = pix_map[last_loc]
                             continue
-                        #paint current position red and add it to the visited pixel list
-                        pix_map[current_loc] = player_color
-                        #if we detect a endless loop, quit
+
+                        # if we detect a endless loop, quit
                         if current_loc in visited:
                             break
                         else:
                             visited.append(current_loc)
+                        # paint current position red and add it to the visited pixel list
+                        pix_map[current_loc] = player_color
+
                         #update statistics
                         current_fitness = image_height - current_loc[1] + image_height*current_laps
                         if current_fitness > global_fitness:
