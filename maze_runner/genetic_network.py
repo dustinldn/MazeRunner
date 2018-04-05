@@ -5,6 +5,7 @@ from PIL import Image
 import glob
 import operator
 import time
+import numpy as np
 
 #default folder defines
 training_mazes_path = 'mazes/train/*.png'
@@ -16,6 +17,7 @@ image_start_point = image_width/2, image_height - 1
 fitness_boundary = 200
 terrain_sight = 5
 terrain_color = (0,0,0)
+player_color = (255,0,0)
 
 #genetic algorithm defines
 population_count = 20
@@ -94,7 +96,7 @@ class GeneticAlgo:
                             last_val = pix_map[last_loc]
                             continue
                         #paint current position red
-                        pix_map[current_loc] = (255,0,0)
+                        pix_map[current_loc] = player_color
 
                         #update statistics
                         current_fitness = image_height - current_loc[1] + image_height*current_laps
@@ -107,14 +109,58 @@ class GeneticAlgo:
                         self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
                         #time.sleep(0.01)
 
+                    #add fitness information for the network
+                    self.population[idx] = network, current_fitness
+
+                if global_fitness < fitness_boundary:
+                    self.mate_population()
+                    n_generation += 1
+
+    def mate_population(self):
+        fitness_weights = [fitness for nn, fitness in self.population]
+        sum_fitness_weights = sum(fitness_weights)
+        cumsum_weights = np.cumsum(np.array(fitness_weights))
+        new_population = []
+        for i in range(0, population_count):
+            rnd_crossover = random.uniform(0,1)
+            if rnd_crossover < crossover_chance:
+                index_first_parent = np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
+                index_second_parent = np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
+                #draw two samples according to fitness
+                # we dont want to mate a network with itself
+                while(index_first_parent == index_second_parent):
+                    index_second_parent = np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
+                #get the neural networks according to the index
+                first_parent = self.population[index_first_parent][0]
+                second_parent = self.population[index_second_parent][0]
+                child = first_parent.mate(second_parent)
+
+                rnd_mutation = random.uniform(0,1)
+                if rnd_mutation < mutation_chance:
+                    child.mutate()
+
+                new_population.append((child,0))
+            else:
+                new_population.append(self.population[i])
+
+        self.population = new_population
+
+
+
+
     def compute_next_location(self, current_loc, pix_map, network):
         distances = self.calculate_distances(current_loc, pix_map)
+        print('Distances: {}'.format(distances))
         result = network.compute(distances)
         # convert nd_array to list and get first entry. Those are our computed values
         result = result.tolist()[0]
+        print('Result: {}'.format(result))
         winning_neuron = result.index(max(result))
+        print('Winning: {}'.format(winning_neuron))
         movement_commmand = output_mapping[winning_neuron]
+        print('Movement_command: {}'.format(movement_commmand))
         next_location = tuple(map(operator.add, current_loc, movement_commmand))
+        print('Next location: {}'.format(next_location))
         return next_location
 
 
