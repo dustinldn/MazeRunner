@@ -257,14 +257,17 @@ class NeuralNetwork:
         self.compute_graph = tf.Graph()
         with self.compute_graph.as_default():
             #placeholder for input
-            x = tf.placeholder('float')
+            #input is a list thats why we have to convert it into a matrix
 
-            l1 = tf.add(tf.matmul(x, self.hidden_1_layer['weights']), self.hidden_1_layer['weights'])
+            x = tf.placeholder('float', name='input_data')
+            val = tf.convert_to_tensor(x)
+            val = tf.reshape(val, [1,5])
+            l1 = tf.add(tf.matmul(val, self.hidden_1_layer['weights']), self.hidden_1_layer['weights'])
             l1 = tf.nn.relu(l1)
 
             l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']), self.hidden_2_layer['biases'])
             l2 = tf.nn.relu(l2)
-            output = tf.add(tf.matmul(l2, self.output_layer['weights']), self.output_layer['biases'])
+            output = tf.add(tf.matmul(l2, self.output_layer['weights']), self.output_layer['biases'], name='output_layer')
 
 
 
@@ -292,16 +295,19 @@ class NeuralNetwork:
         :param data: The input for the neural network.
         :return: The estimated class.
         '''
-        #with tf.Session(graph=self.compute_graph) as sess:
-        #    sess.run(initialize_variables)
-        #    result = sess.run(output, feed_dict={x : data})
-        #return result
-        pass
+        with tf.Session(graph=self.compute_graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            input_data = self.compute_graph.get_tensor_by_name('input_data:0')
+            output = self.compute_graph.get_tensor_by_name('output_layer:0')
+            print(data)
+            result = sess.run(output, feed_dict={input_data : data})
+        return result
 
     def mutate(self):
         '''
         Mutates the first layer and initializes it random.
         '''
+        print("HI")
         self.hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
                           'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
