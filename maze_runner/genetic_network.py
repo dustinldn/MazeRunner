@@ -292,17 +292,18 @@ class NeuralNetwork:
         :param data: The input for the neural network.
         :return: The estimated class.
         '''
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            l1 = tf.add(tf.matmul(data, self.hidden_1_layer['weights']), self.hidden_1_layer['biases'])
-            l1 = tf.nn.relu(l1)
+        #with tf.Session(graph=self.compute_graph) as sess:
+        #    sess.run(initialize_variables)
+        #    result = sess.run(output, feed_dict={x : data})
+        #return result
+        pass
 
-            l2 = tf.add(tf.matmul(l1, self.hidden_2_layer['weights']), self.hidden_2_layer['biases'])
-            l2 = tf.nn.relu(l2)
-
-            output = tf.add(tf.matmul(l2, self.output_layer['weights']), self.output_layer['biases'])
-
-            return sess.run(output)
+    def mutate(self):
+        '''
+        Mutates the first layer and initializes it random.
+        '''
+        self.hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
+                          'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
     def mate(self, other_nn):
         '''
