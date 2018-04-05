@@ -74,7 +74,8 @@ class GeneticAlgo:
                     #fitness of the network
                     current_fitness = 0
                     current_laps = 0
-
+                    #list to store every visited pixel to avoid endless looping between to position
+                    visited = []
                     while True:
                         # recolor last visited location
                         pix_map[last_loc] = last_val
@@ -87,17 +88,23 @@ class GeneticAlgo:
                                 break
                             #last_val holds our current value. if its black, we hit terrain, so exit the loop
                         except IndexError:
-                            #if we are in the
+                            #if we finished the second lap
                             if current_fitness >= fitness_boundary:
                                 break
+                            #clear visited pixel because we start again from the beginning
+                            visited = []
                             current_laps +=1
                             current_loc = image_start_point
                             last_loc = current_loc
                             last_val = pix_map[last_loc]
                             continue
-                        #paint current position red
+                        #paint current position red and add it to the visited pixel list
                         pix_map[current_loc] = player_color
-
+                        #if we detect a endless loop, quit
+                        if current_loc in visited:
+                            break
+                        else:
+                            visited.append(current_loc)
                         #update statistics
                         current_fitness = image_height - current_loc[1] + image_height*current_laps
                         if current_fitness > global_fitness:
