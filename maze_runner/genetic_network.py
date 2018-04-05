@@ -22,7 +22,7 @@ player_color = (255,0,0)
 #genetic algorithm defines
 population_count = 30
 mutation_chance = 0.1
-crossover_chance = 0.8
+crossover_chance = 0.9
 
 
 #neural network defines
@@ -127,6 +127,10 @@ class GeneticAlgo:
                     print(n_generation)
 
     def mate_population(self):
+        '''
+        Funtion wich chooses neural networks and mates them.
+        :return:
+        '''
         fitness_weights = [fitness for nn, fitness in self.population]
         sum_fitness_weights = sum(fitness_weights)
         cumsum_weights = np.cumsum(np.array(fitness_weights))
@@ -160,11 +164,15 @@ class GeneticAlgo:
 
     def compute_next_location(self, current_loc, pix_map, network):
         distances = self.calculate_distances(current_loc, pix_map)
+        print(distances)
         result = network.compute(distances)
         # convert nd_array to list and get first entry. Those are our computed values
         result = result.tolist()[0]
+        print(result)
         winning_neuron = result.index(max(result))
+        print(winning_neuron)
         movement_commmand = output_mapping[winning_neuron]
+        print(movement_commmand)
         next_location = tuple(map(operator.add, current_loc, movement_commmand))
         return next_location
 
@@ -312,7 +320,7 @@ class NeuralNetwork:
 
     def mutate(self):
         '''
-        Mutates the first layer and initializes it random.
+        Mutates a random layer.
         '''
         print("HI")
         with tf.Session(graph=self.init_graph) as sess:
@@ -322,6 +330,12 @@ class NeuralNetwork:
             hl_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
             new_hidden_layer = {'weights': sess.run(hl_weights),
                                       'biases': sess.run(hl_biases)}
+
+            out_weights = self.init_graph.get_tensor_by_name('out_weights:0')
+            out_biases = self.init_graph.get_tensor_by_name('out_biases:0')
+            new_out_layer = {'weights': sess.run(out_weights),
+                                'biases': sess.run(out_biases)}
+
         #assign newly created layer to one of the layers randomly
         random_number = random.randrange(3)
         if random_number == 0:
@@ -329,7 +343,7 @@ class NeuralNetwork:
         elif random_number == 1:
             self.hidden_2_layer = new_hidden_layer
         else:
-            self.output_layer = new_hidden_layer
+            self.output_layer = new_out_layer
 
 
     def mate(self, other_nn):
