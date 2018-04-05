@@ -124,6 +124,7 @@ class GeneticAlgo:
                 if global_fitness < fitness_boundary:
                     self.mate_population()
                     n_generation += 1
+                    print(n_generation)
 
     def mate_population(self):
         fitness_weights = [fitness for nn, fitness in self.population]
@@ -296,7 +297,6 @@ class NeuralNetwork:
             out_weights = tf.Variable(tf.random_normal([n_nodes_hl2, n_classes]), name='out_weights')
             out_biases = tf.Variable(tf.random_normal([n_classes]), name='out_biases')
 
-
     def compute(self, data):
         '''
         Runs the neural network with the given input.
@@ -315,8 +315,14 @@ class NeuralNetwork:
         Mutates the first layer and initializes it random.
         '''
         print("HI")
-        self.hidden_1_layer = {'weights': tf.Variable(tf.random_normal([n_inputs, n_nodes_hl1])),
-                          'biases': tf.Variable(tf.random_normal([n_nodes_hl1]))}
+        with tf.Session(graph=self.init_graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            hl1_weights = self.init_graph.get_tensor_by_name('hl1_weights:0')
+            hl1_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
+            new_hidden_1_layer = {'weights': sess.run(hl1_weights),
+                                      'biases': sess.run(hl1_biases)}
+        self.hidden_1_layer = new_hidden_1_layer
+
 
     def mate(self, other_nn):
         '''
