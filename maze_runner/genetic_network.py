@@ -20,9 +20,9 @@ terrain_color = (0,0,0)
 player_color = (255,0,0)
 
 #genetic algorithm defines
-population_count = 20
-mutation_chance = 0.05
-crossover_chance = 0.5
+population_count = 30
+mutation_chance = 0.1
+crossover_chance = 0.8
 
 
 #neural network defines
@@ -317,11 +317,19 @@ class NeuralNetwork:
         print("HI")
         with tf.Session(graph=self.init_graph) as sess:
             sess.run(tf.global_variables_initializer())
-            hl1_weights = self.init_graph.get_tensor_by_name('hl1_weights:0')
-            hl1_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
-            new_hidden_1_layer = {'weights': sess.run(hl1_weights),
-                                      'biases': sess.run(hl1_biases)}
-        self.hidden_1_layer = new_hidden_1_layer
+            #choose one hidden layer graph output
+            hl_weights = self.init_graph.get_tensor_by_name('hl1_weights:0')
+            hl_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
+            new_hidden_layer = {'weights': sess.run(hl_weights),
+                                      'biases': sess.run(hl_biases)}
+        #assign newly created layer to one of the layers randomly
+        random_number = random.randrange(3)
+        if random_number == 0:
+            self.hidden_1_layer = new_hidden_layer
+        elif random_number == 1:
+            self.hidden_2_layer = new_hidden_layer
+        else:
+            self.output_layer = new_hidden_layer
 
 
     def mate(self, other_nn):
