@@ -19,7 +19,7 @@ terrain_color = (0,0,0)
 player_color = (255,0,0)
 
 #genetic algorithm defines
-population_count = 30
+population_count = 50
 mutation_chance = 0.05
 crossover_chance = 0.9
 #how many entries in each layer will be mutated
@@ -59,9 +59,9 @@ class GeneticAlgo:
         '''
 
         training_mazes = self.load_training_mazes()
+        n_generation = 0
         for image in training_mazes:
             global_fitness = 0
-            n_generation = 0
             #get access to pixel values
             while global_fitness < fitness_boundary:
                 for idx, (network, fitness) in enumerate(self.population):
@@ -139,7 +139,7 @@ class GeneticAlgo:
             rnd_crossover = random.uniform(0,1)
             if rnd_crossover < crossover_chance:
                 index_first_parent = np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
-                index_second_parent = np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
+                index_second_parent = random.randrange(population_count)#np.searchsorted(cumsum_weights, random.randrange(sum_fitness_weights))
                 #draw two samples according to fitness
                 # we dont want to mate a network with itself
                 while(index_first_parent == index_second_parent):
