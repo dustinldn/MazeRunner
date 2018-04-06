@@ -19,8 +19,8 @@ terrain_color = (0,0,0)
 player_color = (255,0,0)
 
 #genetic algorithm defines
-population_count = 10
-mutation_chance = 1
+population_count = 30
+mutation_chance = 0.05
 crossover_chance = 0.9
 #how many entries in each layer will be mutated
 mutate_layer_count = 1
@@ -338,11 +338,29 @@ class NeuralNetwork:
         :return: Child network consisting of parts of both parent networks.
         '''
 
-        #makes sure that the child is not identical to one of the parents
-        random_bool = random.getrandbits(1)
-        new_layer_1 = self.hidden_1_layer if random_bool else other_nn.hidden_1_layer
-        new_layer_2 = self.hidden_2_layer if not random_bool else other_nn.hidden_2_layer
-        new_output_layer = self.output_layer if random.getrandbits(1) else other_nn.output_layer
+        #TODO: Implement this cleaner! Lazy coding
+        new_layer_1_weights = np.ndarray(shape=[n_inputs, n_nodes_hl1], dtype=np.float32)
+        new_layer_1_biases = np.ndarray(shape=[1, n_nodes_hl1], dtype=np.float32)
+        new_layer_2_weights = np.ndarray(shape=[n_nodes_hl1, n_nodes_hl2], dtype=np.float32)
+        new_layer_2_biases = np.ndarray(shape=[1, n_nodes_hl2], dtype=np.float32)
+        new_out_layer_weights = np.ndarray(shape=[n_nodes_hl2, n_classes], dtype=np.float32)
+        new_out_layer_biases = np.ndarray(shape=[1, n_classes], dtype=np.float32)
+        new_layer_attributes_list = [(new_layer_1_weights, self.hidden_1_layer['weights'], other_nn.hidden_1_layer['weights']),
+                                     (new_layer_1_biases, self.hidden_1_layer['biases'].reshape([1, n_nodes_hl1]), other_nn.hidden_1_layer['biases'].reshape([1, n_nodes_hl1])),
+                                     (new_layer_2_weights, self.hidden_2_layer['weights'], other_nn.hidden_2_layer['weights']),
+                                     (new_layer_2_biases, self.hidden_2_layer['biases'].reshape([1, n_nodes_hl2]), other_nn.hidden_2_layer['biases'].reshape([1, n_nodes_hl2])),
+                                     (new_out_layer_weights, self.output_layer['weights'], other_nn.output_layer['weights']),
+                                     (new_out_layer_biases, self.output_layer['biases'].reshape([1, n_classes]), other_nn.output_layer['biases'].reshape([1, n_classes]))]
+
+        for (layer_attributes, parent_1_attributes, parent_2_attributes) in new_layer_attributes_list:
+            dim_1, dim_2 = layer_attributes.shape
+            for i in range(0, dim_1):
+                for j in range(0, dim_2):
+                    random_bool = random.getrandbits(1)
+                    layer_attributes[i][j] = parent_1_attributes[i][j] if random_bool else parent_2_attributes[i][j]
+        new_layer_1 = {'weights' : new_layer_1_weights, 'biases' : new_layer_1_biases}
+        new_layer_2 = {'weights': new_layer_2_weights, 'biases': new_layer_2_biases}
+        new_output_layer = {'weights': new_out_layer_weights, 'biases': new_out_layer_biases}
 
         child_network = NeuralNetwork(hidden_1_layer=new_layer_1, hidden_2_layer=new_layer_2, output_layer=new_output_layer)
         return child_network
