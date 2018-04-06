@@ -4,7 +4,6 @@ import maze_runner
 from PIL import Image
 import glob
 import operator
-import time
 import numpy as np
 
 #default folder defines
@@ -20,9 +19,11 @@ terrain_color = (0,0,0)
 player_color = (255,0,0)
 
 #genetic algorithm defines
-population_count = 30
-mutation_chance = 0.1
+population_count = 10
+mutation_chance = 1
 crossover_chance = 0.9
+#how many entries in each layer will be mutated
+mutate_layer_count = 1
 
 
 #neural network defines
@@ -124,7 +125,6 @@ class GeneticAlgo:
                 if global_fitness < fitness_boundary:
                     self.mate_population()
                     n_generation += 1
-                    print(n_generation)
 
     def mate_population(self):
         '''
@@ -164,15 +164,11 @@ class GeneticAlgo:
 
     def compute_next_location(self, current_loc, pix_map, network):
         distances = self.calculate_distances(current_loc, pix_map)
-        print(distances)
         result = network.compute(distances)
         # convert nd_array to list and get first entry. Those are our computed values
         result = result.tolist()[0]
-        print(result)
         winning_neuron = result.index(max(result))
-        print(winning_neuron)
         movement_commmand = output_mapping[winning_neuron]
-        print(movement_commmand)
         next_location = tuple(map(operator.add, current_loc, movement_commmand))
         return next_location
 
@@ -320,30 +316,19 @@ class NeuralNetwork:
 
     def mutate(self):
         '''
-        Mutates a random layer.
+        Mutates a each layer in the network.
         '''
-        print("HI")
         with tf.Session(graph=self.init_graph) as sess:
             sess.run(tf.global_variables_initializer())
-            #choose one hidden layer graph output
-            hl_weights = self.init_graph.get_tensor_by_name('hl1_weights:0')
-            hl_biases = self.init_graph.get_tensor_by_name('hl1_biases:0')
-            new_hidden_layer = {'weights': sess.run(hl_weights),
-                                      'biases': sess.run(hl_biases)}
-
-            out_weights = self.init_graph.get_tensor_by_name('out_weights:0')
-            out_biases = self.init_graph.get_tensor_by_name('out_biases:0')
-            new_out_layer = {'weights': sess.run(out_weights),
-                                'biases': sess.run(out_biases)}
-
-        #assign newly created layer to one of the layers randomly
-        random_number = random.randrange(3)
-        if random_number == 0:
-            self.hidden_1_layer = new_hidden_layer
-        elif random_number == 1:
-            self.hidden_2_layer = new_hidden_layer
-        else:
-            self.output_layer = new_out_layer
+            #create a list of matrices representing the weights for each layer
+            weight_list = [self.hidden_1_layer['weights'], self.hidden_2_layer['weights'], self.output_layer['weights']]
+            #for each matrix, transform a random entry
+            for weight_matrix in weight_list:
+                i, j = weight_matrix.shape
+                for k in range(0,mutate_layer_count):
+                    rand_i = random.randrange(0,i)
+                    rand_j = random.randrange(0,j)
+                    weight_matrix[rand_i][rand_j] = np.random.normal()
 
 
     def mate(self, other_nn):
