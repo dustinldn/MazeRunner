@@ -18,6 +18,8 @@ fitness_boundary = 200
 terrain_sight = 5
 terrain_color = (0,0,0)
 player_color = (255,0,0)
+show_test_image = True
+show_train_image = True
 
 #genetic algorithm defines
 population_count = 50
@@ -68,7 +70,7 @@ class GeneticAlgo:
             #get access to pixel values
             while global_fitness < fitness_boundary:
                 for idx, (network, fitness) in enumerate(self.population):
-                    current_fitness = self.run_through_maze(network, image, global_fitness, n_generation)
+                    current_fitness = self.run_through_maze(network, image, global_fitness, n_generation, show_train_image)
 
                     if current_fitness > global_fitness:
                         global_fitness = current_fitness
@@ -85,9 +87,14 @@ class GeneticAlgo:
         Runs the best network through all test mazes.
         :return:
         '''
+        test_mazes = self.load_mazes(test_mazes_path)
+        #get the network with the best fitness
+        best_network = max(self.population, key=operator.itemgetter(1))[0]
+        for maze in test_mazes:
+            self.run_through_maze(best_network, maze, 0, 0, show_test_image)
 
 
-    def run_through_maze(self, network, image, global_fitness, n_generation):
+    def run_through_maze(self, network, image, global_fitness, n_generation, show_progress):
         '''
         Runs the maze with the given neural network.
         :param network: Neural network
@@ -141,7 +148,8 @@ class GeneticAlgo:
             # move the current point
             current_loc = self.compute_next_location(current_loc, pix_map, network)
             # update the gui with all statistics
-            self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
+            if show_progress:
+                self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
         return current_fitness
 
     def mate_population(self):
