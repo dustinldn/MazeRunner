@@ -20,16 +20,16 @@ player_color = (255,0,0)
 
 #genetic algorithm defines
 population_count = 50
-mutation_chance = 0.05
-crossover_chance = 0.9
+mutation_chance = 0.1
+crossover_chance = 0.95
 #how many entries in each layer will be mutated
-mutate_layer_count = 1
+mutate_layer_count = 5
 
 
 #neural network defines
 n_inputs = 5
-n_nodes_hl1 = 5
-n_nodes_hl2 = 5
+n_nodes_hl1 = 3
+n_nodes_hl2 = 3
 
 n_classes = 3
 #maps the activation of each layer to a movement command. 0->move left, 1->move_up, 2->move_right
@@ -57,74 +57,84 @@ class GeneticAlgo:
         '''
         Starts the genetic learning process with the images.
         '''
-
+        self.gui.update()
         training_mazes = self.load_training_mazes()
         n_generation = 0
+        image_index = 1
         for image in training_mazes:
             global_fitness = 0
+
             #get access to pixel values
             while global_fitness < fitness_boundary:
                 for idx, (network, fitness) in enumerate(self.population):
-                    pix_map = image.load()
-                    #location of the current pixel
-                    current_loc = image_start_point
-                    #location of the last pixel
-                    last_loc = current_loc
-                    #value of the last pixel
-                    last_val = pix_map[last_loc]
-                    #fitness of the network
-                    current_fitness = 0
-                    current_laps = 0
-                    #list to store every visited pixel to avoid endless looping between to position
-                    visited = []
-                    while True:
-                        # recolor last visited location
-                        pix_map[last_loc] = last_val
-                        #save current color
-                        last_loc = current_loc
-                        #case if we exceed the boundary limit. this means that we finished one lap
-                        try:
-                            last_val = pix_map[last_loc]
-                            if last_val == terrain_color:
-                                break
-                            #last_val holds our current value. if its black, we hit terrain, so exit the loop
-                        except IndexError:
-                            #if we finished the second lap
-                            if current_fitness >= fitness_boundary:
-                                break
-                            #clear visited pixel because we start again from the beginning
-                            visited = []
-                            current_laps +=1
-                            current_loc = image_start_point
-                            last_loc = current_loc
-                            last_val = pix_map[last_loc]
-                            continue
+                    current_fitness = self.run_through_maze(network, image, global_fitness, n_generation)
 
-                        # if we detect a endless loop, quit
-                        if current_loc in visited:
-                            break
-                        else:
-                            visited.append(current_loc)
-                        # paint current position red and add it to the visited pixel list
-                        pix_map[current_loc] = player_color
-
-                        #update statistics
-                        current_fitness = image_height - current_loc[1] + image_height*current_laps
-                        if current_fitness > global_fitness:
-                            global_fitness = current_fitness
-
-                        #move the current point
-                        current_loc = self.compute_next_location(current_loc, pix_map, network)
-                        #update the gui with all statistics
-                        self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
-                        #time.sleep(0.01)
-
+                    if current_fitness > global_fitness:
+                        global_fitness = current_fitness
                     #add fitness information for the network
                     self.population[idx] = network, current_fitness
-
+                    print('Image: {image}\nGeneration: {generation}\nMax_Fitness: {fitness}'.format(image=image_index, generation = n_generation, fitness = global_fitness))
                 if global_fitness < fitness_boundary:
                     self.mate_population()
                     n_generation += 1
+            image_index += 1
+
+    def run_through_maze(self, network, image, global_fitness, n_generation):
+        '''
+        Runs the maze with the given neural network.
+        :param network: Neural network
+        :return: The fitness of the network.
+        '''
+        pix_map = image.load()
+        # location of the current pixel
+        current_loc = image_start_point
+        # location of the last pixel
+        last_loc = current_loc
+        # value of the last pixel
+        last_val = pix_map[last_loc]
+        # fitness of the network
+        current_fitness = 0
+        # list to store every visited pixel to avoid endless looping between to position
+        visited = []
+        current_laps = 0
+        while True:
+            # recolor last visited location
+            pix_map[last_loc] = last_val
+            # save current color
+            last_loc = current_loc
+            # case if we exceed the boundary limit. this means that we finished one lap
+            try:
+                last_val = pix_map[last_loc]
+                if last_val == terrain_color:
+                    break
+                # last_val holds our current value. if its black, we hit terrain, so exit the loop
+            except IndexError:
+                # if we finished the second lap
+                if current_fitness >= fitness_boundary:
+                    break
+                # clear visited pixel because we start again from the beginning
+                visited = []
+                current_laps += 1
+                current_loc = image_start_point
+                last_loc = current_loc
+                last_val = pix_map[last_loc]
+                continue
+
+            # if we detect a endless loop, quit
+            if current_loc in visited:
+                break
+            else:
+                visited.append(current_loc)
+            # paint current position red and add it to the visited pixel list
+            pix_map[current_loc] = player_color
+
+            # update statistics
+            current_fitness = image_height - current_loc[1] + image_height * current_laps
+            # move the current point
+            current_loc = self.compute_next_location(current_loc, pix_map, network)
+            # update the gui with all statistics
+            self.gui.frame.update_state(image, current_fitness, current_laps, global_fitness, n_generation )
+        return current_fitness
 
     def mate_population(self):
         '''
