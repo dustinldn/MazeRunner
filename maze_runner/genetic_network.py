@@ -8,6 +8,7 @@ import numpy as np
 
 #default folder defines
 training_mazes_path = 'mazes/train/*.png'
+test_mazes_path = 'mazes/test/*.png'
 
 #image specific
 image_width = 100
@@ -50,7 +51,7 @@ class GeneticAlgo:
 
     def __init__(self):
         #initialize random population with fitness 0
-        self.gui = maze_runner.Mazerunner(self.train_networks)
+        self.gui = maze_runner.Mazerunner(self.train_networks, self.test_networks)
         self.population = [(NeuralNetwork(), 0) for i in range(0,population_count)]
 
     def train_networks(self):
@@ -58,7 +59,7 @@ class GeneticAlgo:
         Starts the genetic learning process with the images.
         '''
         self.gui.update()
-        training_mazes = self.load_training_mazes()
+        training_mazes = self.load_mazes(training_mazes_path)
         n_generation = 0
         image_index = 1
         for image in training_mazes:
@@ -78,6 +79,13 @@ class GeneticAlgo:
                     self.mate_population()
                     n_generation += 1
             image_index += 1
+
+    def test_networks(self):
+        '''
+        Runs the best network through all test mazes.
+        :return:
+        '''
+
 
     def run_through_maze(self, network, image, global_fitness, n_generation):
         '''
@@ -225,13 +233,13 @@ class GeneticAlgo:
         return distance
 
 
-    def load_training_mazes(self):
+    def load_mazes(self, path):
         '''
         Loads the images used for training the networks.
         :return: List of images.
         '''
-        training_mazes = [Image.open(filename) for filename in glob.glob(training_mazes_path)]
-        return training_mazes
+        mazes = [Image.open(filename) for filename in glob.glob(path)]
+        return mazes
 
     def run_gui(self):
         self.gui.run()
