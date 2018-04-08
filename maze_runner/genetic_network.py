@@ -9,6 +9,16 @@ import numpy as np
 #default folder defines
 training_mazes_path = 'mazes/train/*.png'
 test_mazes_path = 'mazes/test/*.png'
+#default_best_network_folder
+folder_best_network = 'best_network_attributes/'
+#default layer names to save/load
+file_hl1_weights = folder_best_network + 'hl1_weights.npy'
+file_hl1_biases = folder_best_network + 'hl1_biases.npy'
+file_hl2_weights = folder_best_network + 'hl2_weights.npy'
+file_hl2_biases = folder_best_network + 'hl2_biases.npy'
+file_out_weights = folder_best_network + 'out_weights.npy'
+file_out_biases = folder_best_network + 'out_biases.npy'
+
 
 #image specific
 image_width = 100
@@ -19,10 +29,10 @@ terrain_sight = 5
 terrain_color = (0,0,0)
 player_color = (255,0,0)
 show_test_image = True
-show_train_image = True
+show_train_image = False
 
 #genetic algorithm defines
-population_count = 50
+population_count = 20
 mutation_chance = 0.1
 crossover_chance = 0.95
 #how many entries in each layer will be mutated
@@ -81,6 +91,47 @@ class GeneticAlgo:
                     self.mate_population()
                     n_generation += 1
             image_index += 1
+        self.save_best_network()
+
+    def save_best_network(self):
+        '''
+        Saves the best network according to the fitness to load it later on for testing.
+        :return:
+        '''
+        #get the network with the best fitness
+        best_network = max(self.population, key=operator.itemgetter(1))[0]
+        print(best_network.hidden_1_layer)
+        print(best_network.hidden_2_layer)
+        print(best_network.output_layer)
+        #create configuration to define in wich file each attribute of the network is stored
+        save_configuration = [(best_network.hidden_1_layer['weights'], file_hl1_weights),
+                              (best_network.hidden_1_layer['biases'], file_hl1_biases),
+                              (best_network.hidden_2_layer['weights'], file_hl2_weights),
+                              (best_network.hidden_2_layer['biases'], file_hl2_biases),
+                              (best_network.output_layer['weights'], file_out_weights),
+                              (best_network.output_layer['biases'], file_out_biases)
+                              ]
+        for (data, filename) in save_configuration:
+            np.save(filename, data)
+
+    def load_network(self):
+        '''
+        Loads the saved network.
+        :return: saved network.
+        '''
+        hidden_layer_1 = {'weights' : np.load(file_hl1_weights),
+                          'biases' : np.load(file_hl1_biases)}
+        hidden_layer_2 = {'weights' : np.load(file_hl2_weights),
+                          'biases' : np.load(file_hl2_biases)}
+        output_layer = {'weights' : np.load(file_out_weights),
+                        'biases' : np.load(file_out_biases)}
+        print(hidden_layer_1)
+        print(hidden_layer_2)
+        print(output_layer)
+
+        network = NeuralNetwork(hidden_1_layer=hidden_layer_1, hidden_2_layer=hidden_layer_2, output_layer=output_layer)
+        return network
+
 
     def test_networks(self):
         '''
@@ -89,7 +140,7 @@ class GeneticAlgo:
         '''
         test_mazes = self.load_mazes(test_mazes_path)
         #get the network with the best fitness
-        best_network = max(self.population, key=operator.itemgetter(1))[0]
+        best_network = self.load_network()
         for maze in test_mazes:
             self.run_through_maze(best_network, maze, 0, 0, show_test_image)
 
