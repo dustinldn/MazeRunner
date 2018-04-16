@@ -32,7 +32,7 @@ show_test_image = True
 show_train_image = False
 
 #genetic algorithm defines
-population_count = 20
+population_count = 50
 mutation_chance = 0.1
 crossover_chance = 0.95
 #how many entries in each layer will be mutated
@@ -91,7 +91,7 @@ class GeneticAlgo:
                     self.mate_population()
                     n_generation += 1
             image_index += 1
-        self.save_best_network()
+            self.save_best_network()
 
     def save_best_network(self):
         '''
@@ -142,10 +142,11 @@ class GeneticAlgo:
         #get the network with the best fitness
         best_network = self.load_network()
         for maze in test_mazes:
-            self.run_through_maze(best_network, maze, 0, 0, show_test_image)
+            #set current laps = 1 to avoid repeating
+            self.run_through_maze(best_network, maze, 0, 0, show_test_image, current_laps=1)
 
 
-    def run_through_maze(self, network, image, global_fitness, n_generation, show_progress):
+    def run_through_maze(self, network, image, global_fitness, n_generation, show_progress, current_laps=0):
         '''
         Runs the maze with the given neural network.
         :param network: Neural network
@@ -162,7 +163,6 @@ class GeneticAlgo:
         current_fitness = 0
         # list to store every visited pixel to avoid endless looping between to position
         visited = []
-        current_laps = 0
         while True:
             # recolor last visited location
             pix_map[last_loc] = last_val
